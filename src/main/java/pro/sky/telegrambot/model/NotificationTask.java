@@ -1,6 +1,7 @@
 package pro.sky.telegrambot.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -9,31 +10,40 @@ import java.util.Objects;
 public class NotificationTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @NotNull
+    private Long id;
     @Column(name = "chat_id", nullable = false)
-    private long chatId;
+    private Long chatId;
     @Column(name = "notification_text")
     private String notificationText;
     @Column(name = "scheduled_time")
-    private int scheduledTime;
+    private LocalDateTime scheduledTime;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     public NotificationTask(){
     }
-    public NotificationTask( long chatId, String notificationText, int scheduledTime, LocalDateTime createdAt) {
+    public NotificationTask(Long chatId, String notificationText, LocalDateTime scheduledTime, LocalDateTime createdAt) {
         this.chatId = chatId;
         this.notificationText = notificationText;
         this.scheduledTime = scheduledTime;
         this.createdAt = createdAt;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
-    public long getChatId() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getChatId() {
         return chatId;
+    }
+
+    public void setChatId(Long chatId) {
+        this.chatId = chatId;
     }
 
     public String getNotificationText() {
@@ -44,11 +54,11 @@ public class NotificationTask {
         this.notificationText = notificationText;
     }
 
-    public int getScheduledTime() {
+    public LocalDateTime getScheduledTime() {
         return scheduledTime;
     }
 
-    public void setScheduledTime(int scheduledTime) {
+    public void setScheduledTime(LocalDateTime scheduledTime) {
         this.scheduledTime = scheduledTime;
     }
 
@@ -66,8 +76,8 @@ public class NotificationTask {
         if (o == null || getClass() != o.getClass()) return false;
         NotificationTask that = (NotificationTask) o;
         return id == that.id && chatId == that.chatId
-                && scheduledTime == that.scheduledTime
                 && Objects.equals(notificationText, that.notificationText)
+                && Objects.equals(scheduledTime, that.scheduledTime)
                 && Objects.equals(createdAt, that.createdAt);
     }
 
