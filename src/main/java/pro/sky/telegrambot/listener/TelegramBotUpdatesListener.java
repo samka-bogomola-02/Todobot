@@ -8,6 +8,7 @@ import com.pengrad.telegrambot.request.SendMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.model.NotificationTask;
 import pro.sky.telegrambot.repository.NotificationTaskRepository;
@@ -15,20 +16,22 @@ import pro.sky.telegrambot.repository.NotificationTaskRepository;
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-
 @Service
 public class TelegramBotUpdatesListener implements UpdatesListener {
-
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
-
     @Autowired
     private TelegramBot telegramBot;
     @Autowired
     private NotificationTaskRepository notificationTaskRepository;
+
+    public TelegramBotUpdatesListener(TelegramBot telegramBot, NotificationTaskRepository notificationTaskRepository) {
+    }
+
 
     @PostConstruct
     public void init() {
@@ -60,10 +63,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 }
                 // Обработка сообщения с задачей
                 String regex = "(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)";
-
-
                 Pattern pattern = Pattern.compile(regex);
-
                 if (text.matches("\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2}\\s.+")) {
 
                     Matcher matcher = pattern.matcher(text);
@@ -106,5 +106,14 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.error("Ошибка при отправке сообщения: {}", e.getMessage());
         }
     }
+    @Scheduled(cron = "0 * * * * *") // Запускать каждую минуту
+    public void sendScheduledNotifications() {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        List<NotificationTask> tasks = notificationTaskRepository.findByScheduledTime(now);
 
+        for (NotificationTask task : tasks) {
+            sendMessage(task.getChatId(), task.getNotificationText());
+            logger.info("Уведомление отправлено: {}", task.getNotificationText());
+        }
+    }
 }
