@@ -10,7 +10,6 @@ import java.util.Objects;
 public class NotificationTask {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @NotNull
     private Long id;
     @Column(name = "chat_id", nullable = false)
     private Long chatId;

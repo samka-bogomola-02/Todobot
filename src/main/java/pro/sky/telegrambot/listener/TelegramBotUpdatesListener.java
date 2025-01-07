@@ -14,8 +14,10 @@ import pro.sky.telegrambot.model.NotificationTask;
 import pro.sky.telegrambot.repository.NotificationTaskRepository;
 
 import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -28,10 +30,6 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     private TelegramBot telegramBot;
     @Autowired
     private NotificationTaskRepository notificationTaskRepository;
-
-    public TelegramBotUpdatesListener(TelegramBot telegramBot, NotificationTaskRepository notificationTaskRepository) {
-    }
-
 
     @PostConstruct
     public void init() {
@@ -64,7 +62,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 // Обработка сообщения с задачей
                 String regex = "(\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2})(\\s+)(.+)";
                 Pattern pattern = Pattern.compile(regex);
-                if (text.matches("\\d{2}\\.\\d{2}\\.\\d{4}\\s\\d{2}:\\d{2}\\s.+")) {
+                if (text.matches(regex)) {
 
                     Matcher matcher = pattern.matcher(text);
                     if (matcher.find()) {
@@ -72,7 +70,13 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                         String notificationText = matcher.group(3); // Текст уведомления
 
                         // Преобразование строки в LocalDateTime
-                        LocalDateTime scheduledTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                        LocalDateTime scheduledTime = null;
+                        try {
+                            scheduledTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm"));
+                        } catch (DateTimeParseException e) {
+                            sendMessage(chatId, "Неверный формат даты и времени. Пример: 20.03.2022 15:30 Задача");
+                            return;
+                        }
 
                         // Создание объекта NotificationTask
                         NotificationTask notificationTask = new NotificationTask();
@@ -103,6 +107,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         try {
             telegramBot.execute(sendMessage);
         } catch (Exception e) {
+            sendMessage(chatId, "Ошибка при отправке сообщения, повторите попытку");
             logger.error("Ошибка при отправке сообщения: {}", e.getMessage());
         }
     }
