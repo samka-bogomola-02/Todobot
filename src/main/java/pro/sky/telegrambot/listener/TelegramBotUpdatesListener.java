@@ -98,22 +98,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
-    private void sendMessage(long chatId, String text) {
+    public void sendMessage(long chatId, String text) {
         SendMessage sendMessage = new SendMessage(String.valueOf(chatId), text);
         try {
             telegramBot.execute(sendMessage);
         } catch (Exception e) {
             logger.error("Ошибка при отправке сообщения: {}", e.getMessage());
-        }
-    }
-    @Scheduled(cron = "0 * * * * *") // Запускать каждую минуту
-    public void sendScheduledNotifications() {
-        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        List<NotificationTask> tasks = notificationTaskRepository.findByScheduledTime(now);
-
-        for (NotificationTask task : tasks) {
-            sendMessage(task.getChatId(), task.getNotificationText());
-            logger.info("Уведомление отправлено: {}", task.getNotificationText());
         }
     }
 }
